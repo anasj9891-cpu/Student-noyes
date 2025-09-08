@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Students Notes - Admin</title>
+  <meta name="description" content="Admin page - Add Notes and Papers" />
+  <style>
+:root{--brand:#000;--muted:#666;--card:#fff;--bg:#fff}
+*{box-sizing:border-box}
+body{font-family:Inter, system-ui, Arial, sans-serif;margin:0;background:var(--bg);color:#000}
+header{background:white;box-shadow:0 2px 6px rgba(0,0,0,0.06);position:sticky;top:0;z-index:10}
+.container{max-width:1000px;margin:0 auto;padding:18px}
+.brand{font-weight:700;color:var(--brand);font-size:20px}
+nav{display:flex;gap:12px;align-items:center}
+.nav-right{margin-left:auto;display:flex;gap:10px}
+a{color:inherit;text-decoration:none}
+.btn{background:var(--brand);color:white;padding:8px 12px;border-radius:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+.small{font-size:13px;color:var(--muted)}
+section{padding:26px 0}
+h2{margin:6px 0 12px}
+.footer{padding:26px 0;color:var(--muted);text-align:center}
+@media(max-width:600px){.hero{flex-direction:column;align-items:flex-start}.brand{font-size:18px}}
+
+  form{max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+  label{font-weight:600}
+  input[type=text], select{padding:10px;border-radius:8px;border:1px solid #e1e4ee}
+  .hint{font-size:13px;color:var(--muted)}
+  .list{margin-top:10px}
+  .item{padding:8px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container" style="display:flex;align-items:center">
+      <div class="brand">Students Notes - Admin</div>
+      <nav style="margin-left:24px;gap:12px">
+        <a href="index.html">Home</a>
+        <a href="notes.html">Notes</a>
+        <a href="papers.html">Past Papers</a>
+        <a href="quiz.html">Quiz</a>
+      </nav>
+      <div class="nav-right"><span class="small">Admin</span></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section>
+      <h2>Admin - Add Notes / Past Papers</h2>
+      <div class="hint">Use this form to add a new notes or past paper entry. Provide a public link (GitHub file, Google Drive share link, or any PDF URL).</div>
+      <form id="adminForm" onsubmit="return addEntry(event)">
+        <label>Type</label>
+        <select id="entryType"><option value="note">Note</option><option value="paper">Past Paper</option></select>
+        <label>Class</label>
+        <select id="entryClass"><option>9th</option><option>10th</option><option>11th (1st Year)</option><option>12th (2nd Year)</option></select>
+        <label>Subject</label>
+        <select id="entrySubject"><option>Mathematics</option><option>Physics</option><option>Chemistry</option><option>Biology</option><option>English</option></select>
+        <label>Title (optional)</label>
+        <input type="text" id="entryTitle" placeholder="Example: Chapter 1 - Foundations" />
+        <label>Link (public URL to PDF)</label>
+        <input type="text" id="entryLink" placeholder="https://..." required />
+        <div style="display:flex;gap:8px"><button class="btn" type="submit">Add</button><button type="button" onclick="clearAll()" style="background:#888;color:#fff;padding:8px;border-radius:8px;border:none">Clear All (Danger)</button></div>
+      </form>
+
+      <div style="margin-top:20px">
+        <h3>Existing Notes</h3>
+        <div id="notesAdminList" class="list"></div>
+        <h3 style="margin-top:12px">Existing Past Papers</h3>
+        <div id="papersAdminList" class="list"></div>
+      </div>
+    </section>
+    <div class="footer">© Students Notes - Admin</div>
+  </main>
+
+<script>
+const NOTES_KEY = 'students_notes_items';
+const PAPERS_KEY = 'students_papers_items';
+
+function getNotes(){ try{ return JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'); }catch(e){ return []; } }
+function getPapers(){ try{ return JSON.parse(localStorage.getItem(PAPERS_KEY) || '[]'); }catch(e){ return []; } }
+
+function saveNotes(arr){ localStorage.setItem(NOTES_KEY, JSON.stringify(arr)); }
+function savePapers(arr){ localStorage.setItem(PAPERS_KEY, JSON.stringify(arr)); }
+
+function renderAdminLists(){
+  const nlist = getNotes();
+  const plist = getPapers();
+  const ncont = document.getElementById('notesAdminList');
+  const pcont = document.getElementById('papersAdminList');
+  ncont.innerHTML=''; pcont.innerHTML='';
+  nlist.forEach((it,idx)=>{
+    const d = document.createElement('div'); d.className='item';
+    d.innerHTML = '<div><strong>'+it.cls+' - '+it.sub+'</strong><div class="small">'+(it.title||'Notes')+'</div></div><div><button onclick="deleteNote('+idx+')" style="background:#e74c3c;color:#fff;padding:6px;border-radius:6px;border:none">Delete</button></div>';
+    ncont.appendChild(d);
+  });
+  plist.forEach((it,idx)=>{
+    const d = document.createElement('div'); d.className='item';
+    d.innerHTML = '<div><strong>'+it.cls+' - '+it.sub+'</strong><div class="small">'+(it.title||'Past Paper')+'</div></div><div><button onclick="deletePaper('+idx+')" style="background:#e74c3c;color:#fff;padding:6px;border-radius:6px;border:none">Delete</button></div>';
+    pcont.appendChild(d);
+  });
+}
+
+function addEntry(e){
+  e.preventDefault();
+  const type = document.getElementById('entryType').value;
+  const cls = document.getElementById('entryClass').value;
+  const sub = document.getElementById('entrySubject').value;
+  const title = document.getElementById('entryTitle').value.trim();
+  const link = document.getElementById('entryLink').value.trim();
+  if(!link) return alert('Link required');
+  const item = {cls:cls, sub:sub, title:title, link:link};
+  if(type==='note'){
+    const arr = getNotes(); arr.unshift(item); saveNotes(arr);
+  } else {
+    const arr = getPapers(); arr.unshift(item); savePapers(arr);
+  }
+  renderAdminLists();
+  alert('Added successfully. Students will see it on Notes / Past Papers page.');
+  document.getElementById('adminForm').reset();
+  return false;
+}
+
+function deleteNote(i){
+  if(!confirm('Delete this note?')) return;
+  const arr = getNotes(); arr.splice(i,1); saveNotes(arr); renderAdminLists();
+}
+
+function deletePaper(i){
+  if(!confirm('Delete this paper?')) return;
+  const arr = getPapers(); arr.splice(i,1); savePapers(arr); renderAdminLists();
+}
+
+function clearAll(){
+  if(!confirm('This will remove ALL notes and papers from local storage. Continue?')) return;
+  localStorage.removeItem(NOTES_KEY); localStorage.removeItem(PAPERS_KEY); renderAdminLists(); alert('Cleared');
+}
+
+// initial render
+renderAdminLists();
+</script>
+</body>
+</html>
