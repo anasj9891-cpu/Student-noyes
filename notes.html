@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Students Notes - Notes</title>
+  <meta name="description" content="Notes page" />
+  <style>
+:root{--brand:#000;--muted:#666;--card:#fff;--bg:#fff}
+*{box-sizing:border-box}
+body{font-family:Inter, system-ui, Arial, sans-serif;margin:0;background:var(--bg);color:#000}
+header{background:white;box-shadow:0 2px 6px rgba(0,0,0,0.06);position:sticky;top:0;z-index:10}
+.container{max-width:1000px;margin:0 auto;padding:18px}
+.brand{font-weight:700;color:var(--brand);font-size:20px}
+nav{display:flex;gap:12px;align-items:center}
+.nav-right{margin-left:auto;display:flex;gap:10px}
+a{color:inherit;text-decoration:none}
+.btn{background:var(--brand);color:white;padding:8px 12px;border-radius:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+.small{font-size:13px;color:var(--muted)}
+section{padding:26px 0}
+h2{margin:6px 0 12px}
+.footer{padding:26px 0;color:var(--muted);text-align:center}
+@media(max-width:600px){.hero{flex-direction:column;align-items:flex-start}.brand{font-size:18px}}
+
+  .actions{display:flex;gap:10px;align-items:center}
+  .list-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #eee}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container" style="display:flex;align-items:center">
+      <div class="brand">Students Notes</div>
+      <nav style="margin-left:24px;gap:12px">
+        <a href="index.html">Home</a>
+        <a href="notes.html">Notes</a>
+        <a href="papers.html">Past Papers</a>
+        <a href="quiz.html">Quiz</a>
+      </nav>
+      <div class="nav-right"><span class="small">Student Portal</span></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section>
+      <h2>Notes - Download</h2>
+      <div class="actions">
+        <select id="filterClass">
+          <option value="">All Classes</option>
+          <option>9th</option><option>10th</option><option>11th (1st Year)</option><option>12th (2nd Year)</option>
+        </select>
+        <select id="filterSubject">
+          <option value="">All Subjects</option>
+          <option>Mathematics</option><option>Physics</option><option>Chemistry</option><option>Biology</option><option>English</option>
+        </select>
+        <button class="btn" onclick="applyFilter()">Apply</button>
+      </div>
+      <div id="notesList" style="margin-top:12px"></div>
+      <div style="margin-top:12px" class="small">Note: Students cannot add notes. Admin adds notes via a secret admin page.</div>
+    </section>
+    <div class="footer">© Students Notes</div>
+  </main>
+
+<script>
+// LocalStorage keys
+const NOTES_KEY = 'students_notes_items';
+
+function getNotes(){
+  try{
+    const raw = localStorage.getItem(NOTES_KEY);
+    if(!raw) return [];
+    return JSON.parse(raw);
+  }catch(e){ return []; }
+}
+
+function renderNotes(filterClass='', filterSubject=''){
+  const list = getNotes();
+  const cont = document.getElementById('notesList');
+  cont.innerHTML='';
+  const filtered = list.filter(it=>{
+    if(filterClass && it.cls !== filterClass) return false;
+    if(filterSubject && it.sub !== filterSubject) return false;
+    return true;
+  });
+  if(filtered.length===0){
+    cont.innerHTML = '<div class="small">No notes found for selected filters.</div>';
+    return;
+  }
+  filtered.forEach(it=>{
+    const div = document.createElement('div');
+    div.className='card list-item';
+    div.innerHTML = '<div><strong>'+it.cls+' - '+it.sub+'</strong><div class="small">'+(it.title||'Notes')+'</div></div><div><a class="btn" href="'+it.link+'" target="_blank" rel="noopener">Download</a></div>';
+    cont.appendChild(div);
+  });
+}
+
+function applyFilter(){
+  const cls = document.getElementById('filterClass').value;
+  const sub = document.getElementById('filterSubject').value;
+  renderNotes(cls, sub);
+}
+
+// read query params for quick search
+(function(){
+  const params = new URLSearchParams(location.search);
+  const cls = params.get('class');
+  const sub = params.get('subject');
+  if(cls) document.getElementById('filterClass').value = cls;
+  if(sub) document.getElementById('filterSubject').value = sub;
+  renderNotes(cls||'', sub||'');
+})();
+</script>
+</body>
+</html>

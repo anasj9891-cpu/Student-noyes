@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Students Notes - Quiz</title>
+  <meta name="description" content="Quiz page" />
+  <style>
+:root{--brand:#000;--muted:#666;--card:#fff;--bg:#fff}
+*{box-sizing:border-box}
+body{font-family:Inter, system-ui, Arial, sans-serif;margin:0;background:var(--bg);color:#000}
+header{background:white;box-shadow:0 2px 6px rgba(0,0,0,0.06);position:sticky;top:0;z-index:10}
+.container{max-width:1000px;margin:0 auto;padding:18px}
+.brand{font-weight:700;color:var(--brand);font-size:20px}
+nav{display:flex;gap:12px;align-items:center}
+.nav-right{margin-left:auto;display:flex;gap:10px}
+a{color:inherit;text-decoration:none}
+.btn{background:var(--brand);color:white;padding:8px 12px;border-radius:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+.small{font-size:13px;color:var(--muted)}
+section{padding:26px 0}
+h2{margin:6px 0 12px}
+.footer{padding:26px 0;color:var(--muted);text-align:center}
+@media(max-width:600px){.hero{flex-direction:column;align-items:flex-start}.brand{font-size:18px}}
+
+  .quiz-card{max-width:700px;margin:0 auto}
+  .options{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .option{padding:10px;border-radius:8px;border:1px solid #e6e9f2;cursor:pointer}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container" style="display:flex;align-items:center">
+      <div class="brand">Students Notes</div>
+      <nav style="margin-left:24px;gap:12px">
+        <a href="index.html">Home</a>
+        <a href="notes.html">Notes</a>
+        <a href="papers.html">Past Papers</a>
+        <a href="quiz.html">Quiz</a>
+      </nav>
+      <div class="nav-right"><span class="small">Student Portal</span></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="quiz-card card">
+      <h2>Practice Quiz (Math + General)</h2>
+      <div id="quizArea">
+        <!-- question will render here -->
+      </div>
+      <div style="margin-top:12px"><button class="btn" id="nextBtn" onclick="nextQuestion()">Start Quiz</button></div>
+      <div id="scoreArea" style="margin-top:12px" class="small"></div>
+    </section>
+    <div class="footer">© Students Notes</div>
+  </main>
+
+<script>
+const QUESTIONS = [
+  {q:'What is 7 + 5?', choices:['10','12','13','11'], a:1},
+  {q:'Which is a prime number?', choices:['4','6','7','8'], a:2},
+  {q:'Solve: 9 * 3 = ?', choices:['27','26','24','29'], a:0},
+  {q:'Who wrote "The Rime of the Ancient Mariner"?', choices:['Shakespeare','Coleridge','Wordsworth','Tennyson'], a:1},
+  {q:'If x=5, what is 2x+3?', choices:['13','10','12','11'], a:0},
+  {q:'What is the chemical symbol for water?', choices:['O2','H2','H2O','CO2'], a:2},
+  {q:'What is 15 divided by 3?', choices:['3','5','6','4'], a:1},
+  {q:'Which planet is known as the Red Planet?', choices:['Earth','Venus','Mars','Jupiter'], a:2}
+];
+
+let order = [];
+let index = 0;
+let score = 0;
+
+function startQuiz(){
+  order = [...Array(QUESTIONS.length).keys()];
+  // shuffle
+  for(let i=order.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; }
+  index = 0; score = 0;
+  document.getElementById('nextBtn').innerText = 'Next';
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const qIdx = order[index];
+  const q = QUESTIONS[qIdx];
+  const area = document.getElementById('quizArea');
+  area.innerHTML = '<div style="font-weight:700">Question '+(index+1)+' of '+QUESTIONS.length+'</div><div style="margin-top:8px">'+q.q+'</div>';
+  const opts = document.createElement('div'); opts.className='options';
+  q.choices.forEach((c,i)=>{
+    const d = document.createElement('div'); d.className='option'; d.innerText = c;
+    d.onclick = ()=>{ if(d.getAttribute('data-selected')) return; d.setAttribute('data-selected','1'); checkAnswer(i,q.a); };
+    opts.appendChild(d);
+  });
+  area.appendChild(opts);
+  document.getElementById('scoreArea').innerText = '';
+}
+
+function checkAnswer(selected, correct){
+  const options = document.querySelectorAll('.option');
+  options.forEach((el,idx)=>{
+    el.style.pointerEvents='none';
+    if(idx===correct) el.style.border='2px solid green';
+    if(idx===selected && idx!==correct) el.style.border='2px solid red';
+  });
+  if(selected===correct) score++;
+  document.getElementById('scoreArea').innerText = 'Current score: '+score+' / '+(index+1);
+}
+
+function nextQuestion(){
+  if(document.getElementById('nextBtn').innerText === 'Start Quiz'){ startQuiz(); return; }
+  // if no selection made, allow confirm
+  const opts = document.querySelectorAll('.option');
+  if(opts.length>0 && [...opts].every(o=>!o.getAttribute('data-selected'))){
+    if(!confirm('You did not select an answer. Continue?')) return;
+  }
+  index++;
+  if(index >= order.length){
+    // finished
+    document.getElementById('quizArea').innerHTML = '<div style="font-weight:700">Quiz Finished</div><div class="small" style="margin-top:8px">Your score: '+score+' / '+QUESTIONS.length+'</div>';
+    document.getElementById('nextBtn').innerText = 'Restart Quiz';
+    return;
+  }
+  renderQuestion();
+}
+
+document.getElementById('nextBtn').innerText = 'Start Quiz';
+</script>
+</body>
+</html>
